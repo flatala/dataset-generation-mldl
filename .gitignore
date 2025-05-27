@@ -1,0 +1,5 @@
+/__pycache__
+/data
+/dataset_cifar_base
+/dataset_mnist_base
+/local_vs_global_bias.ipynb
