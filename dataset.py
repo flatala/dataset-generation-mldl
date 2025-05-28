@@ -3,7 +3,7 @@ import random
 from PIL import Image, ImageDraw
 from torchvision import datasets, transforms
 
-def create_shape_mask(shape, size, margin=16, shape_scale_range=(0.5, 1.0), position_jitter=0.25):
+def create_shape_mask(shape, size, margin=16, shape_scale_range=(0.3, 1.0), position_jitter=0.5):
     mask = Image.new('L', (size, size), 0)
     draw = ImageDraw.Draw(mask)
     
@@ -123,7 +123,7 @@ def load_dataset(dataset_type, class_labels, max_images=100, image_size=256, pat
     
     return images_by_class
 
-def generate_dataset(base_images_by_class, shape_class_map, output_dir, size=256, margin=16, padding=0, num_samples=100):
+def generate_dataset(base_images_by_class, shape_class_map, output_dir, size=256, margin=16, padding=0, num_samples=100, shape_scale_range = (0.3, 1.0), position_jitter = 0.5):
     for shape, class_labels in shape_class_map.items():
         shape_dir = os.path.join(output_dir, shape)
         os.makedirs(shape_dir, exist_ok=True)
@@ -137,6 +137,6 @@ def generate_dataset(base_images_by_class, shape_class_map, output_dir, size=256
         
         for i in range(num_samples):
             filler_img = random.choice(all_images)
-            mask = create_shape_mask(shape, size, margin)
+            mask = create_shape_mask(shape, size, margin, shape_scale_range=shape_scale_range, position_jitter=position_jitter)
             filled = apply_mask(filler_img, mask, padding)
             filled.save(os.path.join(shape_dir, f"{shape}_{i}.png"))
