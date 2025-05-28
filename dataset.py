@@ -15,6 +15,22 @@ def create_shape_mask(shape, size, margin=16):
         draw.polygon([(size//2, top), (left, bottom), (right, bottom)], fill=255)
     return mask
 
+def create_pattern_background(size, pattern_type='stripes', colors=((200, 200, 200), (255, 255, 255)), stripe_width=10, dot_radius=5, spacing=20):
+    background = Image.new('RGB', size, colors[1])
+    draw = ImageDraw.Draw(background)
+    
+    if pattern_type == 'stripes':
+        for x in range(0, size[0], stripe_width * 2):
+            draw.rectangle([x, 0, x + stripe_width - 1, size[1]], fill=colors[0])
+    elif pattern_type == 'horizontal_stripes':
+        for y in range(0, size[1], stripe_width * 2):
+            draw.rectangle([0, y, size[0], y + stripe_width - 1], fill=colors[0])
+    elif pattern_type == 'dots':
+        for y in range(0, size[1], spacing):
+            for x in range(0, size[0], spacing):
+                draw.ellipse([x - dot_radius, y - dot_radius, x + dot_radius, y + dot_radius], fill=colors[0])
+    return background
+
 def apply_mask(image, mask, padding=0):
     image = image.resize(mask.size)
     background = Image.new('RGB', mask.size, (255, 255, 255))
@@ -34,8 +50,7 @@ def load_images_from_folder(folder_path, max_images=100):
     images = [Image.open(f).convert('RGB') for f in sampled_files]
     return images
 
-def load_dataset(dataset_type, class_labels, max_images=100, image_size=256):
-    transform = transforms.Compose([transforms.Resize((image_size, image_size)), transforms.ToTensor()])
+def load_dataset(dataset_type, class_labels, max_images=100, image_size=256, pattern_settings=None):
     images_by_class = {}
     
     if dataset_type == 'cifar':
@@ -51,6 +66,12 @@ def load_dataset(dataset_type, class_labels, max_images=100, image_size=256):
     elif dataset_type == 'custom':
         for label, folder_path in class_labels.items():
             images_by_class[label] = load_images_from_folder(folder_path, max_images)
+    
+    elif dataset_type == 'pattern':
+        for label in class_labels:
+            pattern_config = pattern_settings[label]
+            pattern_img = create_pattern_background((image_size, image_size), **pattern_config)
+            images_by_class[label] = [pattern_img] * max_images
     
     else:
         raise ValueError(f"Unsupported dataset type: {dataset_type}")
