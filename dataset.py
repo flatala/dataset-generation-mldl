@@ -3,38 +3,58 @@ import random
 from PIL import Image, ImageDraw
 from torchvision import datasets, transforms
 
-def create_shape_mask(shape, size, margin=16):
+def create_shape_mask(shape, size, margin=16, shape_scale_range=(0.5, 1.0), position_jitter=0.25):
     mask = Image.new('L', (size, size), 0)
     draw = ImageDraw.Draw(mask)
-    left, top, right, bottom = margin, margin, size - margin, size - margin
+    
+    # Random scale for the shape
+    scale = random.uniform(*shape_scale_range)
+    shape_size = int(size * scale)
+    
+    # Random shift of the shape within the image canvas
+    max_offset = int(size * position_jitter)
+    offset_x = random.randint(-max_offset, max_offset)
+    offset_y = random.randint(-max_offset, max_offset)
+    
+    # Centered position with offset
+    center_x = size // 2 + offset_x
+    center_y = size // 2 + offset_y
+    
+    left = max(center_x - shape_size // 2, 0)
+    top = max(center_y - shape_size // 2, 0)
+    right = min(center_x + shape_size // 2, size)
+    bottom = min(center_y + shape_size // 2, size)
+    
     if shape == 'circle':
         draw.ellipse((left, top, right, bottom), fill=255)
     elif shape == 'square':
         draw.rectangle((left, top, right, bottom), fill=255)
     elif shape == 'triangle':
-        draw.polygon([(size//2, top), (left, bottom), (right, bottom)], fill=255)
+        draw.polygon([
+            (center_x, top),
+            (left, bottom),
+            (right, bottom)
+        ], fill=255)
     return mask
-
-def create_pattern_background(size, pattern_type='stripes', colors=((200, 200, 200), (255, 255, 255)), stripe_width=10, dot_radius=5, spacing=20):
-    background = Image.new('RGB', size, colors[1])
-    draw = ImageDraw.Draw(background)
-    
-    if pattern_type == 'stripes':
-        for x in range(0, size[0], stripe_width * 2):
-            draw.rectangle([x, 0, x + stripe_width - 1, size[1]], fill=colors[0])
-    elif pattern_type == 'horizontal_stripes':
-        for y in range(0, size[1], stripe_width * 2):
-            draw.rectangle([0, y, size[0], y + stripe_width - 1], fill=colors[0])
-    elif pattern_type == 'dots':
-        for y in range(0, size[1], spacing):
-            for x in range(0, size[0], spacing):
-                draw.ellipse([x - dot_radius, y - dot_radius, x + dot_radius, y + dot_radius], fill=colors[0])
-    return background
 
 def apply_mask(image, mask, padding=0):
     image = image.resize(mask.size)
-    background = Image.new('RGB', mask.size, (255, 255, 255))
-    masked_image = Image.composite(image, background, mask)
+    
+    # Center the filler image inside the shape area
+    shape_bbox = mask.getbbox()  # Bounding box of the shape
+    if shape_bbox:
+        shape_width = shape_bbox[2] - shape_bbox[0]
+        shape_height = shape_bbox[3] - shape_bbox[1]
+        
+        filler_resized = image.resize((shape_width, shape_height))
+        
+        # Create a white canvas and paste the filler at the shape's position
+        background = Image.new('RGB', mask.size, (255, 255, 255))
+        background.paste(filler_resized, (shape_bbox[0], shape_bbox[1]))
+    else:
+        background = image.copy()
+    
+    masked_image = Image.composite(background, Image.new('RGB', mask.size, (255, 255, 255)), mask)
     
     if padding > 0:
         new_size = (mask.size[0] + 2 * padding, mask.size[1] + 2 * padding)
@@ -43,6 +63,33 @@ def apply_mask(image, mask, padding=0):
         return padded_background
     else:
         return masked_image
+
+def create_pattern_background(size, pattern_type='stripes', colors=((200, 200, 200), (255, 255, 255)), stripe_width=10.0, dot_radius=5.0, spacing=20.0):
+    background = Image.new('RGB', size, colors[1])
+    draw = ImageDraw.Draw(background)
+    
+    if pattern_type == 'stripes':
+        x = 0.0
+        while x < size[0]:
+            x_end = min(x + stripe_width, size[0])
+            draw.rectangle([x, 0, x_end - 1, size[1]], fill=colors[0])
+            x += stripe_width * 2
+    elif pattern_type == 'horizontal_stripes':
+        y = 0.0
+        while y < size[1]:
+            y_end = min(y + stripe_width, size[1])
+            draw.rectangle([0, y, size[0], y_end - 1], fill=colors[0])
+            y += stripe_width * 2
+    elif pattern_type == 'dots':
+        y = 0.0
+        while y < size[1]:
+            x = 0.0
+            while x < size[0]:
+                bbox = [x - dot_radius, y - dot_radius, x + dot_radius, y + dot_radius]
+                draw.ellipse(bbox, fill=colors[0])
+                x += spacing
+            y += spacing
+    return background
 
 def load_images_from_folder(folder_path, max_images=100):
     image_files = [os.path.join(folder_path, f) for f in os.listdir(folder_path) if f.lower().endswith(('.jpg', '.png'))]
