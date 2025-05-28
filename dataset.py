@@ -7,16 +7,16 @@ def create_shape_mask(shape, size, margin=16, shape_scale_range=(0.5, 1.0), posi
     mask = Image.new('L', (size, size), 0)
     draw = ImageDraw.Draw(mask)
     
-    # Random scale for the shape
+    # random scale
     scale = random.uniform(*shape_scale_range)
     shape_size = int(size * scale)
     
-    # Random shift of the shape within the image canvas
+    # random shift
     max_offset = int(size * position_jitter)
     offset_x = random.randint(-max_offset, max_offset)
     offset_y = random.randint(-max_offset, max_offset)
     
-    # Centered position with offset
+    # centered with offset
     center_x = size // 2 + offset_x
     center_y = size // 2 + offset_y
     
@@ -40,25 +40,23 @@ def create_shape_mask(shape, size, margin=16, shape_scale_range=(0.5, 1.0), posi
 def apply_mask(image, mask, padding=0):
     image = image.resize(mask.size)
     
-    # Center the filler image inside the shape area
-    shape_bbox = mask.getbbox()  # Bounding box of the shape
+    shape_bbox = mask.getbbox()
     if shape_bbox:
         shape_width = shape_bbox[2] - shape_bbox[0]
         shape_height = shape_bbox[3] - shape_bbox[1]
         
         filler_resized = image.resize((shape_width, shape_height))
-        
-        # Create a white canvas and paste the filler at the shape's position
-        background = Image.new('RGB', mask.size, (255, 255, 255))
+    
+        background = Image.new('RGB', mask.size, (0, 0, 0))
         background.paste(filler_resized, (shape_bbox[0], shape_bbox[1]))
     else:
         background = image.copy()
     
-    masked_image = Image.composite(background, Image.new('RGB', mask.size, (255, 255, 255)), mask)
+    masked_image = Image.composite(background, Image.new('RGB', mask.size, (0, 0, 0)), mask)
     
     if padding > 0:
         new_size = (mask.size[0] + 2 * padding, mask.size[1] + 2 * padding)
-        padded_background = Image.new('RGB', new_size, (255, 255, 255))
+        padded_background = Image.new('RGB', new_size, (0, 0, 0))
         padded_background.paste(masked_image, (padding, padding))
         return padded_background
     else:
@@ -125,9 +123,7 @@ def load_dataset(dataset_type, class_labels, max_images=100, image_size=256, pat
     
     return images_by_class
 
-def generate_dataset(base_images_by_class, shape_class_map, output_dir, size=256, margin=16, padding=0):
-    num_images = min(len(images) for images in base_images_by_class.values())
-    
+def generate_dataset(base_images_by_class, shape_class_map, output_dir, size=256, margin=16, padding=0, num_samples=100):
     for shape, class_labels in shape_class_map.items():
         shape_dir = os.path.join(output_dir, shape)
         os.makedirs(shape_dir, exist_ok=True)
@@ -136,7 +132,10 @@ def generate_dataset(base_images_by_class, shape_class_map, output_dir, size=256
         for class_label in class_labels:
             all_images.extend(base_images_by_class[class_label])
         
-        for i in range(num_images):
+        if not all_images:
+            raise ValueError(f"No images found for shape '{shape}' and labels {class_labels}")
+        
+        for i in range(num_samples):
             filler_img = random.choice(all_images)
             mask = create_shape_mask(shape, size, margin)
             filled = apply_mask(filler_img, mask, padding)
