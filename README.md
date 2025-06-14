@@ -14,7 +14,7 @@ The code supports popular datasets (CIFAR-10, MNIST), custom folders, and synthe
 
 ## Example Output
 
-Patterned packground example:
+Patterned background example:
 <div style="display: flex; gap: 16px;">
   <img src="dataset_pattern_base/train/circle/circle_1.png" width="120"/>
   <img src="dataset_pattern_base/train/circle/circle_17.png" width="120"/>
