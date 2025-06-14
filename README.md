@@ -16,23 +16,23 @@ The code supports popular datasets (CIFAR-10, MNIST), custom folders, and synthe
 
 Patterned packground example:
 <div style="display: flex; gap: 16px;">
-  <img src="dataset_pattern_base/train/circle/circle_1.png" width="150"/>
-  <img src="dataset_pattern_base/train/circle/circle_17.png" width="150"/>
-  <img src="dataset_pattern_base/train/square/square_7.png" width="150"/>
-  <img src="dataset_pattern_base/train/square/square_47.png" width="150"/>
-  <img src="dataset_pattern_base/train/triangle/triangle_1.png" width="150"/>
-  <img src="dataset_pattern_base/train/triangle/triangle_37.png" width="150"/>
+  <img src="dataset_pattern_base/train/circle/circle_1.png" width="100"/>
+  <img src="dataset_pattern_base/train/circle/circle_17.png" width="100"/>
+  <img src="dataset_pattern_base/train/square/square_7.png" width="100"/>
+  <img src="dataset_pattern_base/train/square/square_47.png" width="100"/>
+  <img src="dataset_pattern_base/train/triangle/triangle_1.png" width="100"/>
+  <img src="dataset_pattern_base/train/triangle/triangle_37.png" width="100"/>
 </div>
 
 
 Custom background example:
 <div style="display: flex; gap: 16px;">
-  <img src="dataset_custom_base/train/circle/circle_7.png" width="150"/>
-  <img src="dataset_custom_base/train/circle/circle_12.png" width="150"/>
-  <img src="dataset_custom_base/train/square/square_37.png" width="150"/>
-  <img src="dataset_custom_base/train/square/square_12.png" width="150"/>
-  <img src="dataset_custom_base/train/triangle/triangle_1.png" width="150"/>
-  <img src="dataset_custom_base/train/triangle/triangle_7.png" width="150"/>
+  <img src="dataset_custom_base/train/circle/circle_7.png" width="100"/>
+  <img src="dataset_custom_base/train/circle/circle_12.png" width="100"/>
+  <img src="dataset_custom_base/train/square/square_37.png" width="100"/>
+  <img src="dataset_custom_base/train/square/square_12.png" width="100"/>
+  <img src="dataset_custom_base/train/triangle/triangle_1.png" width="100"/>
+  <img src="dataset_custom_base/train/triangle/triangle_7.png" width="100"/>
 </div>
 
 
